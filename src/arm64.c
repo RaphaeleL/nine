@@ -54,16 +54,44 @@ static void emit_epilogue(void)
 
 static void emit_print(AstNode *call)
 {
-    if (!call || !call->value) {
-        erro("print requires a string argument\n");
+    if (!call) {
         return;
     }
 
-    char *value = strdup(call->value);
-    if (!value) {
+    char *owned = NULL;
+    const char *text = call->value;
+
+    if (text) {
+        owned = print_format_apply(text, call->children, call->children_len);
+        if (!owned) {
+            return;
+        }
+        text = owned;
+    } else if (call->children_len == 1) {
+        ExprValue value = {0};
+        if (!expr_eval_const(call->children[0], &value)) {
+            erro("print requires a constant expression argument\n");
+            return;
+        }
+        owned = expr_value_to_string(&value);
+        if (!owned) {
+            return;
+        }
+        text = owned;
+    }
+
+    if (!text) {
+        erro("print requires an argument\n");
+        free(owned);
         return;
     }
-    push(&literals, value);
+
+    char *literal = strdup(text);
+    free(owned);
+    if (!literal) {
+        return;
+    }
+    push(&literals, literal);
 
     size_t id = literals.len - 1;
     emit("    adrp x0, Lstr%zu@PAGE\n", id);
@@ -151,8 +179,8 @@ static bool arm64_emit_program(AstNode *program)
 {
     if (!program || program->kind != AST_PROGRAM)
         return false;
-    if (DEBUG)
-        ast_print(program, 0);
+    // if (DEBUG)
+    //     ast_print(program, 0);
 
     emit_header();
 

@@ -19,10 +19,18 @@ typedef enum {
     TOKEN_CALL,
     TOKEN_IDENT,
     TOKEN_STRING,
+    TOKEN_NUMBER,
     TOKEN_LPAREN,
     TOKEN_RPAREN,
     TOKEN_START,
     TOKEN_END,
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
+    TOKEN_SLASHSLASH,
+    TOKEN_PERCENT,
+    TOKEN_COMMA,
 } TokenKind;
 
 typedef struct {

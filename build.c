@@ -290,12 +290,12 @@ int main(void)
     if (!link_unittests())
         return EXIT_FAILURE;
 
-    Cmd cmd = {0};
-    push(&cmd, "./nine", "examples/000_helloworld.9");
-    push(&cmd, "-o", "./out/helloworld", "-s");
-    push(&cmd, "-r", "--target", "arm64");
-    if (!run_always(&cmd))
-        return EXIT_FAILURE;
+    // Cmd cmd = {0};
+    // push(&cmd, "./nine", "examples/001_arithmetic.9");
+    // push(&cmd, "-o", "./out/arithmetic", "-s");
+    // push(&cmd, "-r", "--target", "arm64");
+    // if (!run_always(&cmd))
+    //     return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
 }

@@ -1767,7 +1767,7 @@ QOLDEF void qol_log(qol_log_level_t level, const char *fmt, ...)
     const char *level_str = qol_level_to_str(level);
 
     const char *level_color = qol_logger_color ? qol_level_to_color(level) : "";
-    const char *time_color = qol_logger_time_color ? QOL_DIM : QOL_COLOR_RESET "" QOL_DIM;
+    const char *time_color = qol_logger_time_color ? QOL_DIM : QOL_COLOR_RESET;
 
     char time_buf[32] = {0};
     if (qol_logger_time) {

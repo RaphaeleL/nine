@@ -32,10 +32,26 @@ const char *token_kind_name(TokenKind kind)
         return "LPAREN";
     case TOKEN_RPAREN:
         return "RPAREN";
+    case TOKEN_NUMBER:
+        return "NUMBER";
     case TOKEN_START:
         return "START";
     case TOKEN_END:
         return "END";
+    case TOKEN_PLUS:
+        return "PLUS";
+    case TOKEN_MINUS:
+        return "MINUS";
+    case TOKEN_STAR:
+        return "STAR";
+    case TOKEN_SLASH:
+        return "SLASH";
+    case TOKEN_SLASHSLASH:
+        return "SLASHSLASH";
+    case TOKEN_PERCENT:
+        return "PERCENT";
+    case TOKEN_COMMA:
+        return "COMMA";
     default:
         return "UNKNOWN";
     }
@@ -96,6 +112,23 @@ static bool lex_identifier(const char *line, size_t *i, TokenList *tokens, size_
     return true;
 }
 
+static bool lex_number(const char *line, size_t *i, TokenList *tokens, size_t line_no)
+{
+    size_t start = *i;
+    while (line[*i] && isdigit((unsigned char)line[*i])) {
+        (*i)++;
+    }
+
+    char *text = strndup(line + start, *i - start);
+    if (!text) {
+        return false;
+    }
+
+    push_token(tokens, TOKEN_NUMBER, text, line_no);
+    free(text);
+    return true;
+}
+
 static bool lex_string(const char *line, size_t *i, TokenList *tokens, size_t line_no)
 {
     (*i)++;
@@ -145,12 +178,45 @@ static bool lex_line(const char *line, size_t line_no, TokenList *tokens)
             push_token(tokens, TOKEN_RPAREN, NULL, line_no);
             i++;
             break;
+        case '+':
+            push_token(tokens, TOKEN_PLUS, NULL, line_no);
+            i++;
+            break;
+        case '-':
+            push_token(tokens, TOKEN_MINUS, NULL, line_no);
+            i++;
+            break;
+        case '*':
+            push_token(tokens, TOKEN_STAR, NULL, line_no);
+            i++;
+            break;
+        case '/':
+            if (line[i + 1] == '/') {
+                push_token(tokens, TOKEN_SLASHSLASH, NULL, line_no);
+                i += 2;
+            } else {
+                push_token(tokens, TOKEN_SLASH, NULL, line_no);
+                i++;
+            }
+            break;
+        case '%':
+            push_token(tokens, TOKEN_PERCENT, NULL, line_no);
+            i++;
+            break;
+        case ',':
+            push_token(tokens, TOKEN_COMMA, NULL, line_no);
+            i++;
+            break;
         case '"':
             if (!lex_string(line, &i, tokens, line_no))
                 return false;
             break;
         default:
-            if (isalpha((unsigned char)c) || c == '_') {
+            if (isdigit((unsigned char)c)) {
+                if (!lex_number(line, &i, tokens, line_no)) {
+                    return false;
+                }
+            } else if (isalpha((unsigned char)c) || c == '_') {
                 if (!lex_identifier(line, &i, tokens, line_no)) {
                     return false;
                 }

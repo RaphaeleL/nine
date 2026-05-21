@@ -78,7 +78,12 @@ void usage(void)
 
 int main(int argc, char **argv)
 {
-    init_logger(.level = LOG_INFO, .time = true, .color = true, .time_color = true);
+    if (DEBUG) {
+        init_logger(.level = LOG_INFO, .time = true, .color = true, .time_color = true);
+    } else {
+        init_logger(.only = LOG_INFO, .only_set=true, .time = true, .color = !true, .time_color = !true);
+    }
+
 
     add_argument("--version", NULL, "Show version");
     add_argument("--target", "arm64", "Set target architecture");

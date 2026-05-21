@@ -11,6 +11,7 @@
 #define QOL_STRIP_PREFIX
 #include "../libs/build.h"
 
+#include "test_arithmetic.h"
 #include "test_helloworld.h"
 
 int main() {
