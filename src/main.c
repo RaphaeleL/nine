@@ -1,28 +1,36 @@
+/*
+ * nine — main.c
+ *
+ * Compiler entry point: CLI, pipeline orchestration (preprocess, lex, parse,
+ * compile).
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_IMPLEMENTATION
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/main.h"
 
+#include "../libs/build.h"
+#include "./include/compiler.h"
+#include "./include/constants.h"
 #include "./include/lexer.h"
 #include "./include/parser.h"
 #include "./include/preprocessor.h"
-#include "./include/compiler.h"
-#include "./include/constants.h"
-#include "./include/main.h"
 #include "./include/stats.h"
 
-static bool arg_is_set(arg_t *arg) {
-    return arg && arg->value && strcmp(arg->value, "1") == 0;
-}
+static bool arg_is_set(arg_t *arg) { return arg && arg->value && strcmp(arg->value, "1") == 0; }
 
-static bool arg_has_value(arg_t *arg) {
-    return arg && arg->value && strcmp(arg->value, "1") != 0;
-}
+static bool arg_has_value(arg_t *arg) { return arg && arg->value && strcmp(arg->value, "1") != 0; }
 
-static bool cli_flag_takes_value(const char *flag) {
+static bool cli_flag_takes_value(const char *flag)
+{
     return strcmp(flag, "--output") == 0 || strcmp(flag, "--target") == 0;
 }
 
-static bool cli_is_option_value(int argc, char **argv, int index) {
+static bool cli_is_option_value(int argc, char **argv, int index)
+{
     if (index <= 0 || index >= argc) {
         return false;
     }
@@ -38,7 +46,8 @@ static bool cli_is_option_value(int argc, char **argv, int index) {
     return false;
 }
 
-static bool cli_flag_enabled(int argc, char **argv, const char *short_flag, const char *long_flag) {
+static bool cli_flag_enabled(int argc, char **argv, const char *short_flag, const char *long_flag)
+{
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], short_flag) == 0 || strcmp(argv[i], long_flag) == 0) {
             return true;
@@ -47,23 +56,28 @@ static bool cli_flag_enabled(int argc, char **argv, const char *short_flag, cons
     return false;
 }
 
-void version(void) {
+void version(void)
+{
     info("Nine " VERSION "\n");
     info("Copyright (c) 2026 Raphaele Salvatore Licciardo\n");
 }
 
-void usage(void) {
+void usage(void)
+{
     info("Usage: nine [options] <file.9>\n");
     info("Options:\n");
     info("  -h, --help           Show help\n");
     info("  -v, --version        Show version\n");
-    info("  -o, --output <path>  Output binary path (default: input name without extension)\n");
-    info("  -s, --save-asm       Save assembly next to output path (with -o) or in .\n");
+    info("  -o, --output <path>  Output binary path (default: input name without "
+         "extension)\n");
+    info("  -s, --save-asm       Save assembly next to output path (with -o) or "
+         "in .\n");
     info("  -r, --run            Run the linked binary after build\n");
     info("  -t, --target <arch>  Target architecture (default: arm64)\n");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     init_logger(.level = LOG_INFO, .time = true, .color = true, .time_color = true);
 
     add_argument("--version", NULL, "Show version");

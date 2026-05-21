@@ -1,3 +1,12 @@
+/*
+ * nine — compiler.h
+ *
+ * Compile options, target architecture enum, and compile() entry point.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef COMPILER_H
 #define COMPILER_H
 

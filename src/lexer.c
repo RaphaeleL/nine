@@ -1,27 +1,48 @@
+/*
+ * nine — lexer.c
+ *
+ * Lexical analyzer: turns preprocessed source lines into a token stream.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/lexer.h"
 
 #include <ctype.h>
 #include <string.h>
 
-#include "./include/lexer.h"
+#include "../libs/build.h"
 
-const char *token_kind_name(TokenKind kind) {
+const char *token_kind_name(TokenKind kind)
+{
     switch (kind) {
-    case TOKEN_EOF:       return "EOF";
-    case TOKEN_DEFINE:    return "DEFINE";
-    case TOKEN_CALL:      return "CALL";
-    case TOKEN_IDENT:     return "IDENT";
-    case TOKEN_STRING:    return "STRING";
-    case TOKEN_LPAREN:    return "LPAREN";
-    case TOKEN_RPAREN:    return "RPAREN";
-    case TOKEN_START:     return "START";
-    case TOKEN_END:       return "END";
-    default:              return "UNKNOWN";
+    case TOKEN_EOF:
+        return "EOF";
+    case TOKEN_DEFINE:
+        return "DEFINE";
+    case TOKEN_CALL:
+        return "CALL";
+    case TOKEN_IDENT:
+        return "IDENT";
+    case TOKEN_STRING:
+        return "STRING";
+    case TOKEN_LPAREN:
+        return "LPAREN";
+    case TOKEN_RPAREN:
+        return "RPAREN";
+    case TOKEN_START:
+        return "START";
+    case TOKEN_END:
+        return "END";
+    default:
+        return "UNKNOWN";
     }
 }
 
-void token_list_release(TokenList *tokens) {
+void token_list_release(TokenList *tokens)
+{
     if (!tokens || !tokens->data) {
         return;
     }
@@ -32,7 +53,8 @@ void token_list_release(TokenList *tokens) {
     release(tokens);
 }
 
-static void push_token(TokenList *tokens, TokenKind kind, const char *text, size_t line) {
+static void push_token(TokenList *tokens, TokenKind kind, const char *text, size_t line)
+{
     Token token = {
         .kind = kind,
         .text = text ? strdup(text) : NULL,
@@ -41,7 +63,8 @@ static void push_token(TokenList *tokens, TokenKind kind, const char *text, size
     push(tokens, token);
 }
 
-static bool lex_identifier(const char *line, size_t *i, TokenList *tokens, size_t line_no) {
+static bool lex_identifier(const char *line, size_t *i, TokenList *tokens, size_t line_no)
+{
     size_t start = *i;
     while (line[*i] && (isalnum((unsigned char)line[*i]) || line[*i] == '_')) {
         (*i)++;
@@ -73,7 +96,8 @@ static bool lex_identifier(const char *line, size_t *i, TokenList *tokens, size_
     return true;
 }
 
-static bool lex_string(const char *line, size_t *i, TokenList *tokens, size_t line_no) {
+static bool lex_string(const char *line, size_t *i, TokenList *tokens, size_t line_no)
+{
     (*i)++;
     size_t start = *i;
 
@@ -97,7 +121,8 @@ static bool lex_string(const char *line, size_t *i, TokenList *tokens, size_t li
     return true;
 }
 
-static bool lex_line(const char *line, size_t line_no, TokenList *tokens) {
+static bool lex_line(const char *line, size_t line_no, TokenList *tokens)
+{
     if (!line) {
         return true;
     }
@@ -112,9 +137,18 @@ static bool lex_line(const char *line, size_t line_no, TokenList *tokens) {
         }
 
         switch (c) {
-        case '(': push_token(tokens, TOKEN_LPAREN, NULL, line_no); i++; break;
-        case ')': push_token(tokens, TOKEN_RPAREN, NULL, line_no); i++; break;
-        case '"': if (!lex_string(line, &i, tokens, line_no)) return false; break;
+        case '(':
+            push_token(tokens, TOKEN_LPAREN, NULL, line_no);
+            i++;
+            break;
+        case ')':
+            push_token(tokens, TOKEN_RPAREN, NULL, line_no);
+            i++;
+            break;
+        case '"':
+            if (!lex_string(line, &i, tokens, line_no))
+                return false;
+            break;
         default:
             if (isalpha((unsigned char)c) || c == '_') {
                 if (!lex_identifier(line, &i, tokens, line_no)) {
@@ -131,7 +165,8 @@ static bool lex_line(const char *line, size_t line_no, TokenList *tokens) {
     return true;
 }
 
-bool lex(String *source, TokenList *tokens) {
+bool lex(String *source, TokenList *tokens)
+{
     if (!source || !tokens) {
         return false;
     }

@@ -1,13 +1,23 @@
+/*
+ * nine — preprocessor.c
+ *
+ * Preprocessor: #define, #include, comment removal, and macro expansion.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/preprocessor.h"
 
 #include <ctype.h>
 #include <string.h>
 
-#include "./include/preprocessor.h"
+#include "../libs/build.h"
 #include "./include/stats.h"
 
-static bool is_blank(const char *line) {
+static bool is_blank(const char *line)
+{
     if (!line) {
         return true;
     }
@@ -19,7 +29,8 @@ static bool is_blank(const char *line) {
     return true;
 }
 
-static void strip_line_comment(char *line) {
+static void strip_line_comment(char *line)
+{
     if (!line) {
         return;
     }
@@ -39,12 +50,14 @@ static void strip_line_comment(char *line) {
     str_trim(line);
 }
 
-static void drop_line(String *output, size_t index) {
+static void drop_line(String *output, size_t index)
+{
     free(output->data[index]);
     dropn(output, index);
 }
 
-static char *join_tokens(const String *tokens, size_t start) {
+static char *join_tokens(const String *tokens, size_t start)
+{
     if (!tokens || start >= tokens->len) {
         return strdup("");
     }
@@ -69,7 +82,8 @@ static char *join_tokens(const String *tokens, size_t start) {
     return joined;
 }
 
-static bool parse_define(const char *line, HashMap *directives) {
+static bool parse_define(const char *line, HashMap *directives)
+{
     if (!line || !directives) {
         return false;
     }
@@ -96,7 +110,8 @@ static bool parse_define(const char *line, HashMap *directives) {
     return true;
 }
 
-static void apply_directives(String *output, HashMap *directives) {
+static void apply_directives(String *output, HashMap *directives)
+{
     if (!output || !directives) {
         return;
     }
@@ -128,7 +143,8 @@ static void apply_directives(String *output, HashMap *directives) {
     }
 }
 
-HashMap *preprocess(String *output) {
+HashMap *preprocess(String *output)
+{
     if (!output) {
         return NULL;
     }
@@ -138,7 +154,7 @@ HashMap *preprocess(String *output) {
         return NULL;
     }
 
-    for (size_t i = 0; i < output->len; ) {
+    for (size_t i = 0; i < output->len;) {
         strip_line_comment(output->data[i]);
 
         if (is_blank(output->data[i])) {

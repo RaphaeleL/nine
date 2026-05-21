@@ -1,3 +1,12 @@
+/*
+ * nine — stats.h
+ *
+ * Optional compile statistics API (no-ops when STATS is 0).
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef STATS_H
 #define STATS_H
 

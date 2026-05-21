@@ -1,23 +1,40 @@
+/*
+ * nine — parser.c
+ *
+ * Parser: builds an AST from tokens (functions, print calls, call invocations).
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/parser.h"
 
 #include <string.h>
 
-#include "./include/parser.h"
+#include "../libs/build.h"
 #include "./include/stats.h"
 
-const char *ast_kind_name(AstKind kind) {
+const char *ast_kind_name(AstKind kind)
+{
     switch (kind) {
-    case AST_PROGRAM:  return "PROGRAM";
-    case AST_FUNCTION: return "FUNCTION";
-    case AST_BLOCK:    return "BLOCK";
-    case AST_CALL:     return "CALL";
-    case AST_INVOKE:   return "INVOKE";
-    default:           return "UNKNOWN";
+    case AST_PROGRAM:
+        return "PROGRAM";
+    case AST_FUNCTION:
+        return "FUNCTION";
+    case AST_BLOCK:
+        return "BLOCK";
+    case AST_CALL:
+        return "CALL";
+    case AST_INVOKE:
+        return "INVOKE";
+    default:
+        return "UNKNOWN";
     }
 }
 
-static AstNode *ast_node(AstKind kind, const char *name, const char *value) {
+static AstNode *ast_node(AstKind kind, const char *name, const char *value)
+{
     AstNode *node = calloc(1, sizeof(AstNode));
     if (!node) {
         return NULL;
@@ -34,7 +51,8 @@ static AstNode *ast_node(AstKind kind, const char *name, const char *value) {
     return node;
 }
 
-static bool ast_add_child(AstNode *parent, AstNode *child) {
+static bool ast_add_child(AstNode *parent, AstNode *child)
+{
     if (!parent || !child) {
         return false;
     }
@@ -49,7 +67,8 @@ static bool ast_add_child(AstNode *parent, AstNode *child) {
     return true;
 }
 
-void ast_release(AstNode *node) {
+void ast_release(AstNode *node)
+{
     if (!node) {
         return;
     }
@@ -64,8 +83,10 @@ void ast_release(AstNode *node) {
     free(node);
 }
 
-void ast_print(AstNode *node, size_t depth) {
-    if (!node) return;
+void ast_print(AstNode *node, size_t depth)
+{
+    if (!node)
+        return;
 
     char indent[32] = {0};
     size_t spaces = depth * 2;
@@ -79,7 +100,8 @@ void ast_print(AstNode *node, size_t depth) {
         hint("%s%s %s()\n", indent, ast_kind_name(node->kind), node->name ? node->name : "");
         break;
     case AST_CALL:
-        hint("%s%s %s(%s)\n", indent, ast_kind_name(node->kind), node->name ? node->name : "", node->value ? node->value : "");
+        hint("%s%s %s(%s)\n", indent, ast_kind_name(node->kind), node->name ? node->name : "",
+             node->value ? node->value : "");
         break;
     case AST_INVOKE:
         hint("%s%s %s\n", indent, ast_kind_name(node->kind), node->name ? node->name : "");
@@ -99,14 +121,16 @@ typedef struct {
     size_t pos;
 } Parser;
 
-static Token *parser_peek(Parser *p) {
+static Token *parser_peek(Parser *p)
+{
     if (!p || !p->tokens || p->pos >= p->tokens->len) {
         return NULL;
     }
     return &p->tokens->data[p->pos];
 }
 
-static Token *parser_advance(Parser *p) {
+static Token *parser_advance(Parser *p)
+{
     Token *current = parser_peek(p);
     if (current && current->kind != TOKEN_EOF) {
         p->pos++;
@@ -114,7 +138,8 @@ static Token *parser_advance(Parser *p) {
     return current;
 }
 
-static bool parser_expect(Parser *p, TokenKind kind, const char *what) {
+static bool parser_expect(Parser *p, TokenKind kind, const char *what)
+{
     Token *token = parser_peek(p);
     if (!token || token->kind != kind) {
         size_t line = token ? token->line : 0;
@@ -126,7 +151,8 @@ static bool parser_expect(Parser *p, TokenKind kind, const char *what) {
     return true;
 }
 
-static bool parse_call(Parser *p, AstNode **out) {
+static bool parse_call(Parser *p, AstNode **out)
+{
     Token *name = parser_peek(p);
     if (!name || name->kind != TOKEN_IDENT) {
         return false;
@@ -155,7 +181,8 @@ static bool parse_call(Parser *p, AstNode **out) {
     return *out != NULL;
 }
 
-static bool parse_invoke(Parser *p, AstNode **out) {
+static bool parse_invoke(Parser *p, AstNode **out)
+{
     if (!parser_expect(p, TOKEN_CALL, "'call'")) {
         return false;
     }
@@ -174,7 +201,8 @@ static bool parse_invoke(Parser *p, AstNode **out) {
     return *out != NULL;
 }
 
-static bool parse_statement(Parser *p, AstNode **out) {
+static bool parse_statement(Parser *p, AstNode **out)
+{
     Token *token = parser_peek(p);
     if (token && token->kind == TOKEN_CALL) {
         return parse_invoke(p, out);
@@ -182,7 +210,8 @@ static bool parse_statement(Parser *p, AstNode **out) {
     return parse_call(p, out);
 }
 
-static bool parse_block(Parser *p, AstNode **out) {
+static bool parse_block(Parser *p, AstNode **out)
+{
     *out = ast_node(AST_BLOCK, NULL, NULL);
     if (!*out) {
         return false;
@@ -209,7 +238,8 @@ static bool parse_block(Parser *p, AstNode **out) {
     return true;
 }
 
-static bool parse_function(Parser *p, AstNode **out) {
+static bool parse_function(Parser *p, AstNode **out)
+{
     if (!parser_expect(p, TOKEN_DEFINE, "'define'")) {
         return false;
     }
@@ -256,12 +286,13 @@ static bool parse_function(Parser *p, AstNode **out) {
     return true;
 }
 
-bool parse(TokenList *tokens, AstNode **program) {
+bool parse(TokenList *tokens, AstNode **program)
+{
     if (!tokens || !program) {
         return false;
     }
 
-    Parser p = { .tokens = tokens, .pos = 0 };
+    Parser p = {.tokens = tokens, .pos = 0};
     *program = ast_node(AST_PROGRAM, NULL, NULL);
     if (!*program) {
         return false;

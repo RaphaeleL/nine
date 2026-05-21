@@ -1,17 +1,28 @@
+/*
+ * nine — arm64.c
+ *
+ * macOS ARM64 backend: emit assembly, invoke clang, link and optionally run
+ * output.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/arm64.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "./include/arm64.h"
+#include "../libs/build.h"
 #include "./include/constants.h"
 
 static FILE *asm_out = NULL;
 static String literals = {0};
 
-static void emit(const char *fmt, ...) {
+static void emit(const char *fmt, ...)
+{
     if (!asm_out) {
         return;
     }
@@ -22,23 +33,27 @@ static void emit(const char *fmt, ...) {
     va_end(args);
 }
 
-static void emit_header(void) {
+static void emit_header(void)
+{
     emit(".global _main\n");
     emit(".align 2\n");
 }
 
-static void emit_prologue(void) {
+static void emit_prologue(void)
+{
     emit("    stp x29, x30, [sp, #-16]!\n");
     emit("    mov x29, sp\n");
 }
 
-static void emit_epilogue(void) {
+static void emit_epilogue(void)
+{
     emit("    mov x0, #0\n");
     emit("    ldp x29, x30, [sp], #16\n");
     emit("    ret\n");
 }
 
-static void emit_print(AstNode *call) {
+static void emit_print(AstNode *call)
+{
     if (!call || !call->value) {
         erro("print requires a string argument\n");
         return;
@@ -56,7 +71,8 @@ static void emit_print(AstNode *call) {
     emit("    bl _puts\n");
 }
 
-static void emit_builtin_call(AstNode *call) {
+static void emit_builtin_call(AstNode *call)
+{
     if (!call || call->kind != AST_CALL) {
         return;
     }
@@ -69,7 +85,8 @@ static void emit_builtin_call(AstNode *call) {
     erro("Unsupported builtin: %s\n", call->name);
 }
 
-static void emit_invoke(AstNode *invoke) {
+static void emit_invoke(AstNode *invoke)
+{
     if (!invoke || invoke->kind != AST_INVOKE || !invoke->name) {
         return;
     }
@@ -77,7 +94,8 @@ static void emit_invoke(AstNode *invoke) {
     emit("    bl _%s\n", invoke->name);
 }
 
-static void emit_statement(AstNode *stmt) {
+static void emit_statement(AstNode *stmt)
+{
     if (!stmt) {
         return;
     }
@@ -95,45 +113,52 @@ static void emit_statement(AstNode *stmt) {
     }
 }
 
-static void emit_block(AstNode *block) {
-    if (!block || block->kind != AST_BLOCK) return;
+static void emit_block(AstNode *block)
+{
+    if (!block || block->kind != AST_BLOCK)
+        return;
 
     for (size_t i = 0; i < block->children_len; i++) {
         emit_statement(block->children[i]);
     }
 }
 
-static void emit_function(AstNode *function) {
-    if (!function || function->kind != AST_FUNCTION || !function->name) return;
+static void emit_function(AstNode *function)
+{
+    if (!function || function->kind != AST_FUNCTION || !function->name)
+        return;
 
     emit("\n_%s:\n", function->name);
     emit_prologue();
 
-    if (function->children_len > 0) emit_block(function->children[0]);
+    if (function->children_len > 0)
+        emit_block(function->children[0]);
 
     emit_epilogue();
 }
 
-static void emit_literals(void) {
+static void emit_literals(void)
+{
     for (size_t i = 0; i < literals.len; i++) {
         emit("\nLstr%zu:\n", i);
         emit("    .asciz \"%s\"\n", literals.data[i]);
     }
 }
 
-static void literals_release(void) {
-    release_string(&literals);
-}
+static void literals_release(void) { release_string(&literals); }
 
-static bool arm64_emit_program(AstNode *program) {
-    if (!program || program->kind != AST_PROGRAM) return false;
-    if (DEBUG)  ast_print(program, 0);
+static bool arm64_emit_program(AstNode *program)
+{
+    if (!program || program->kind != AST_PROGRAM)
+        return false;
+    if (DEBUG)
+        ast_print(program, 0);
 
     emit_header();
 
     for (size_t i = 0; i < program->children_len; i++) {
         AstNode *child = program->children[i];
-        switch(child->kind) {
+        switch (child->kind) {
         case AST_FUNCTION:
             emit_function(child);
             break;
@@ -148,21 +173,25 @@ static bool arm64_emit_program(AstNode *program) {
     return true;
 }
 
-static bool arm64_link(const char *asm_path, const char *bin_path) {
+static bool arm64_link(const char *asm_path, const char *bin_path)
+{
     Cmd link = {0};
     push(&link, "clang", "-o", bin_path, asm_path);
     return run_always(&link);
 }
 
-static bool arm64_run_binary(const char *bin_path) {
+static bool arm64_run_binary(const char *bin_path)
+{
     Cmd run_bin = {0};
     push(&run_bin, bin_path);
     info("Running: %s\n", bin_path);
     return run_always(&run_bin);
 }
 
-bool arm64_compile(AstNode *program, const CompileOptions *opts) {
-    if (!program || !opts || !opts->input_path) return false;
+bool arm64_compile(AstNode *program, const CompileOptions *opts)
+{
+    if (!program || !opts || !opts->input_path)
+        return false;
 
     const char *stem_source = opts->output_path ? opts->output_path : opts->input_path;
     char *base = get_filename_no_ext(stem_source);
@@ -202,7 +231,8 @@ bool arm64_compile(AstNode *program, const CompileOptions *opts) {
     fclose(asm_out);
     asm_out = NULL;
 
-    if (!ok) return false;
+    if (!ok)
+        return false;
 
     info("Wrote assembly: %s\n", asm_path);
 

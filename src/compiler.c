@@ -1,14 +1,24 @@
+/*
+ * nine — compiler.c
+ *
+ * Target selection and dispatch to the active code generator backend.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_STRIP_PREFIX
-#include "../libs/build.h"
+#include "./include/compiler.h"
 
 #include <string.h>
 
-#include "./include/compiler.h"
+#include "../libs/build.h"
 #include "./include/arm64.h"
 #include "./include/stats.h"
 #include "./include/x86_64.h"
 
-Target get_target(void) {
+Target get_target(void)
+{
     arg_t *target = get_argument("--target");
     if (!target) {
         erro("No target provided\n");
@@ -23,7 +33,8 @@ Target get_target(void) {
     return TARGET_UNSUPPORTED;
 }
 
-const char *target_name(Target target) {
+const char *target_name(Target target)
+{
     const char *real_target = "n/a";
     switch (target) {
     case TARGET_ARM64:
@@ -35,7 +46,8 @@ const char *target_name(Target target) {
     }
 }
 
-bool compile(AstNode *program, const CompileOptions *opts) {
+bool compile(AstNode *program, const CompileOptions *opts)
+{
     if (!program || !opts || !opts->input_path) {
         return false;
     }

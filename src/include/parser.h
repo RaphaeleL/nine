@@ -1,9 +1,17 @@
+/*
+ * nine — parser.h
+ *
+ * AST node types, tree utilities, and parse() from a token stream.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef PARSER_H
 #define PARSER_H
 
 #define QOL_STRIP_PREFIX
 #include "../../libs/build.h"
-
 #include "./lexer.h"
 
 typedef enum {

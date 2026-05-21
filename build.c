@@ -1,3 +1,13 @@
+/*
+ * nine — build.c
+ *
+ * Build driver: compiles src sources, links the nine binary, rotates build
+ * logs.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_IMPLEMENTATION
 #define QOL_STRIP_PREFIX
 #include "./libs/build.h"
@@ -5,15 +15,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SRC_DIR     "src"
-#define OUT_DIR     "out"
-#define LOG_DIR     "logs"
-#define LOG_MAX     20
-#define BINARY      "nine"
-#define MAIN_SRC    SRC_DIR "/main.c"
-#define INCLUDE     "-I" SRC_DIR "/include"
+#define SRC_DIR "src"
+#define OUT_DIR "out"
+#define LOG_DIR "logs"
+#define LOG_MAX 20
+#define BINARY "nine"
+#define MAIN_SRC SRC_DIR "/main.c"
+#define INCLUDE "-I" SRC_DIR "/include"
 
-static bool is_main_source(const char *path) {
+static bool is_main_source(const char *path)
+{
     return str_ends_with(path, "/main.c") || str_ends_with(path, "\\main.c");
 }
 
@@ -22,22 +33,28 @@ typedef struct {
     time_t mtime;
 } LogEntry;
 
-static int log_entry_older_first(const void *a, const void *b) {
+static int log_entry_older_first(const void *a, const void *b)
+{
     const LogEntry *lhs = a;
     const LogEntry *rhs = b;
-    if (lhs->mtime < rhs->mtime) return -1;
-    if (lhs->mtime > rhs->mtime) return 1;
+    if (lhs->mtime < rhs->mtime)
+        return -1;
+    if (lhs->mtime > rhs->mtime)
+        return 1;
     return 0;
 }
 
-static const char *log_basename(const char *path) {
+static const char *log_basename(const char *path)
+{
     const char *base = strrchr(path, '/');
-    if (base) return base + 1;
+    if (base)
+        return base + 1;
     base = strrchr(path, '\\');
     return base ? base + 1 : path;
 }
 
-static void rotate_logs(void) {
+static void rotate_logs(void)
+{
     String files = {0};
     if (!get_files_in_dir(LOG_DIR, &files)) {
         return;
@@ -91,17 +108,21 @@ static void rotate_logs(void) {
     release_string(&files);
 }
 
-static bool compile_sources(Procs *procs) {
+static bool compile_sources(Procs *procs)
+{
     String sources = {0};
-    if (!read_dir(SRC_DIR, &sources)) return false;
+    if (!read_dir(SRC_DIR, &sources))
+        return false;
 
     mkdir_if_not_exists(OUT_DIR);
 
     bool ok = true;
     for (size_t i = 0; i < sources.len; i++) {
         const char *path = sources.data[i];
-        if (!str_ends_with(path, ".c")) continue;
-        if (is_main_source(path)) continue;
+        if (!str_ends_with(path, ".c"))
+            continue;
+        if (is_main_source(path))
+            continue;
 
         char *name = get_filename_no_ext(path);
         if (!name) {
@@ -126,7 +147,8 @@ static bool compile_sources(Procs *procs) {
     return ok;
 }
 
-static bool link_binary(void) {
+static bool link_binary(void)
+{
     String sources = {0};
     String objs = {0};
     if (!read_dir(SRC_DIR, &sources)) {
@@ -202,7 +224,8 @@ static bool link_binary(void) {
     return ok;
 }
 
-int main(void) {
+int main(void)
+{
     init_logger(.level = LOG_INFO, .time = true, .color = true, .time_color = true);
     mkdir_if_not_exists(LOG_DIR);
     rotate_logs();
@@ -210,14 +233,18 @@ int main(void) {
     auto_rebuild_plus(__FILE__, "./libs/build.h");
 
     Procs procs = {0};
-    if (!compile_sources(&procs))   return EXIT_FAILURE;
-    if (!procs_wait(&procs))        return EXIT_FAILURE;
-    if (!link_binary())                    return EXIT_FAILURE;
-
+    if (!compile_sources(&procs))
+        return EXIT_FAILURE;
+    if (!procs_wait(&procs))
+        return EXIT_FAILURE;
+    if (!link_binary())
+        return EXIT_FAILURE;
 
     Cmd cmd = {0};
-    push(&cmd, "./nine", "examples/000_helloworld.9", "-o", "./out/helloworld", "-s", "-r", "--target", "arm64");
-    if (!run_always(&cmd)) return EXIT_FAILURE;
+    push(&cmd, "./nine", "examples/000_helloworld.9", "-o", "./out/helloworld", "-s", "-r",
+         "--target", "arm64");
+    if (!run_always(&cmd))
+        return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
 }

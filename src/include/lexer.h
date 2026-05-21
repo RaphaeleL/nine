@@ -1,3 +1,12 @@
+/*
+ * nine — lexer.h
+ *
+ * Token kinds, token list, and lex() for preprocessed source.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #ifndef LEXER_H
 #define LEXER_H
 
