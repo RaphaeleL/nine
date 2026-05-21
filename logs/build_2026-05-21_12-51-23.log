@@ -1,0 +1,2 @@
+[INFO] 2026-05-21 12:51:23 >>> Up to date: nine
+[EXEC] 2026-05-21 12:51:23 >>> ./nine examples/000_helloworld.9 -o ./out/helloworld -s -r --target arm64

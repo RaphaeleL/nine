@@ -1,0 +1,15 @@
+#include "base"
+
+#define HELLO "Hello, World!"
+
+define foo() start
+    print("hello")
+end
+
+define main() start
+    // This prints hello world
+    print(HELLO) // hello world
+
+    call foo
+
+end
