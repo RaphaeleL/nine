@@ -1,4 +1,14 @@
 repos:
+  - repo: local
+    hooks:
+      - id: nine-unittests
+        name: nine unittests
+        entry: bash
+        args: [-c, 'rm -rf out/ && ./build && ./out/unittests']
+        language: system
+        pass_filenames: false
+        always_run: true
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.3.0
     hooks:

@@ -10,6 +10,7 @@
 #define QOL_STRIP_PREFIX
 #include "./include/parser.h"
 
+#include <stdarg.h>
 #include <string.h>
 
 #include "../libs/build.h"
@@ -83,10 +84,29 @@ void ast_release(AstNode *node)
     free(node);
 }
 
-void ast_print(AstNode *node, size_t depth)
+static void ast_format_line(String *out, const char *fmt, ...)
 {
-    if (!node)
+    if (!out || !fmt) {
         return;
+    }
+
+    char line[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(line, sizeof(line), fmt, args);
+    va_end(args);
+
+    char *copy = strdup(line);
+    if (copy) {
+        push(out, copy);
+    }
+}
+
+void ast_format(AstNode *node, size_t depth, String *out)
+{
+    if (!node || !out) {
+        return;
+    }
 
     char indent[32] = {0};
     size_t spaces = depth * 2;
@@ -97,23 +117,35 @@ void ast_print(AstNode *node, size_t depth)
 
     switch (node->kind) {
     case AST_FUNCTION:
-        hint("%s%s %s()\n", indent, ast_kind_name(node->kind), node->name ? node->name : "");
+        ast_format_line(out, "%s%s %s()", indent, ast_kind_name(node->kind),
+                        node->name ? node->name : "");
         break;
     case AST_CALL:
-        hint("%s%s %s(%s)\n", indent, ast_kind_name(node->kind), node->name ? node->name : "",
-             node->value ? node->value : "");
+        ast_format_line(out, "%s%s %s(%s)", indent, ast_kind_name(node->kind),
+                        node->name ? node->name : "", node->value ? node->value : "");
         break;
     case AST_INVOKE:
-        hint("%s%s %s\n", indent, ast_kind_name(node->kind), node->name ? node->name : "");
+        ast_format_line(out, "%s%s %s", indent, ast_kind_name(node->kind),
+                        node->name ? node->name : "");
         break;
     default:
-        hint("%s%s\n", indent, ast_kind_name(node->kind));
+        ast_format_line(out, "%s%s", indent, ast_kind_name(node->kind));
         break;
     }
 
     for (size_t i = 0; i < node->children_len; i++) {
-        ast_print(node->children[i], depth + 1);
+        ast_format(node->children[i], depth + 1, out);
     }
+}
+
+void ast_print(AstNode *node, size_t depth)
+{
+    String lines = {0};
+    ast_format(node, depth, &lines);
+    for (size_t i = 0; i < lines.len; i++) {
+        hint("%s\n", lines.data[i]);
+    }
+    release_string(&lines);
 }
 
 typedef struct {

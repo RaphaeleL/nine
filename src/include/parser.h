@@ -33,6 +33,7 @@ typedef struct AstNode {
 const char *ast_kind_name(AstKind kind);
 void ast_release(AstNode *node);
 void ast_print(AstNode *node, size_t depth);
+void ast_format(AstNode *node, size_t depth, String *out);
 bool parse(TokenList *tokens, AstNode **program);
 
 #endif

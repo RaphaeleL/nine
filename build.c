@@ -147,45 +147,49 @@ static bool compile_sources(Procs *procs)
     return ok;
 }
 
-static bool link_binary(void)
+static bool collect_object_files(String *objs)
 {
     String sources = {0};
-    String objs = {0};
     if (!read_dir(SRC_DIR, &sources)) {
         return false;
     }
 
     for (size_t i = 0; i < sources.len; i++) {
         const char *path = sources.data[i];
-        if (!str_ends_with(path, ".c")) {
-            continue;
-        }
-        if (is_main_source(path)) {
+        if (!str_ends_with(path, ".c") || is_main_source(path)) {
             continue;
         }
 
         char *name = get_filename_no_ext(path);
         if (!name) {
             release_string(&sources);
-            release_string(&objs);
             return false;
         }
 
-        char *obj = temp_sprintf("%s/%s.o", OUT_DIR, name);
+        char *obj_path = temp_sprintf("%s/%s.o", OUT_DIR, name);
         free(name);
 
-        char *obj_path = strdup(obj);
-        if (!obj_path) {
+        char *owned = strdup(obj_path);
+        if (!owned) {
             release_string(&sources);
-            release_string(&objs);
             return false;
         }
-        push(&objs, obj_path);
+        push(objs, owned);
+    }
+
+    release_string(&sources);
+    return true;
+}
+
+static bool link_binary(void)
+{
+    String objs = {0};
+    if (!collect_object_files(&objs)) {
+        return false;
     }
 
     const char **inputs = calloc(objs.len + 1, sizeof(const char *));
     if (!inputs) {
-        release_string(&sources);
         release_string(&objs);
         return false;
     }
@@ -200,12 +204,10 @@ static bool link_binary(void)
 
     if (rebuild == 0) {
         info("Up to date: %s\n", BINARY);
-        release_string(&sources);
         release_string(&objs);
         return true;
     }
     if (rebuild < 0) {
-        release_string(&sources);
         release_string(&objs);
         return false;
     }
@@ -219,7 +221,53 @@ static bool link_binary(void)
 
     bool ok = run_always(&link);
 
-    release_string(&sources);
+    release_string(&objs);
+    return ok;
+}
+
+static bool link_unittests(void)
+{
+    const char *test_src = "tests/unittests.c";
+    const char *test_bin = OUT_DIR "/unittests";
+
+    String objs = {0};
+    if (!collect_object_files(&objs)) {
+        return false;
+    }
+
+    const char **inputs = calloc(objs.len + 1, sizeof(const char *));
+    if (!inputs) {
+        release_string(&objs);
+        return false;
+    }
+
+    inputs[0] = test_src;
+    for (size_t i = 0; i < objs.len; i++) {
+        inputs[i + 1] = objs.data[i];
+    }
+
+    int rebuild = needs_rebuild(test_bin, inputs, objs.len + 1);
+    free(inputs);
+
+    if (rebuild == 0) {
+        info("Up to date: %s\n", test_bin);
+        release_string(&objs);
+        return true;
+    }
+    if (rebuild < 0) {
+        release_string(&objs);
+        return false;
+    }
+
+    Cmd link = {0};
+    push(&link, "cc", "-Wall", "-Wextra", INCLUDE, test_src);
+    for (size_t i = 0; i < objs.len; i++) {
+        push(&link, objs.data[i]);
+    }
+    push(&link, "-o", test_bin);
+
+    bool ok = run_always(&link);
+
     release_string(&objs);
     return ok;
 }
@@ -239,10 +287,13 @@ int main(void)
         return EXIT_FAILURE;
     if (!link_binary())
         return EXIT_FAILURE;
+    if (!link_unittests())
+        return EXIT_FAILURE;
 
     Cmd cmd = {0};
-    push(&cmd, "./nine", "examples/000_helloworld.9", "-o", "./out/helloworld", "-s", "-r",
-         "--target", "arm64");
+    push(&cmd, "./nine", "examples/000_helloworld.9");
+    push(&cmd, "-o", "./out/helloworld", "-s");
+    push(&cmd, "-r", "--target", "arm64");
     if (!run_always(&cmd))
         return EXIT_FAILURE;
 
