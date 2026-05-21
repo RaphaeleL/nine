@@ -65,16 +65,15 @@ void nine_stats_print(void)
     bool parse_critical = stats_phase_critical(g_stats.parse_ms);
     bool compile_critical = stats_compile_critical(g_stats.compile_ms);
     bool total_critical = stats_total_critical(total);
-    bool banner_critical =
-        preprocess_critical || lex_critical || parse_critical || compile_critical || total_critical;
 
     stats_log(preprocess_critical, "Preprocessing time:   %.3f ms\n", g_stats.preprocess_ms);
-    stats_log(lex_critical, "Lexing time:          %.3f ms\n", g_stats.lex_ms);
-    stats_log(parse_critical, "Parsing time:         %.3f ms\n", g_stats.parse_ms);
-    stats_log(compile_critical, "Compile time:         %.3f ms\n", g_stats.compile_ms);
-    stats_log(total_critical, "Total time:           %.3f ms\n", total);
-    stats_log(false, "Total function calls: %zu\n", g_stats.function_calls);
-    stats_log(false, "Total optimizations:  %zu\n", g_stats.optimizations);
+    stats_log(lex_critical,        "Lexing time:          %.3f ms\n", g_stats.lex_ms);
+    stats_log(parse_critical,      "Parsing time:         %.3f ms\n", g_stats.parse_ms);
+    stats_log(compile_critical,    "Compile time:         %.3f ms\n", g_stats.compile_ms);
+    stats_log(total_critical,      "Total time:           %.3f ms\n", total);
+    stats_log(false,               "Total function calls: %zu\n", g_stats.function_calls);
+    stats_log(false,               "Total optimizations:  %zu\n", g_stats.optimizations);
+
 }
 
 #endif
