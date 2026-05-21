@@ -1,1 +1,26 @@
-Nine Language
+Nine
+
+A small language and compiler. You write .9 files, nine preprocesses them,
+lexes, parses, emits assembly, calls clang, and gives you a binary.
+
+Right now the backend that actually works is macOS arm64. x86_64 is stubbed.
+
+Build
+
+  cc build.c -o build
+  ./build
+
+That compiles the compiler and links ./nine. Re-run ./build when you change
+src/*.c.
+
+Run
+
+  ./nine examples/000_helloworld.9 -r
+
+  -o path     where the binary goes (default: ./basename of input)
+  -s          keep the .s file (next to -o output, or in cwd)
+  -r          run the binary after linking
+  -t arm64    target (default arm64)
+  -v          version
+
+Early project. Expect things to move.
