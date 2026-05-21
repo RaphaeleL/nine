@@ -1,3 +1,0 @@
-[EXEC] 2026-05-21 12:48:48 >>> cc -Wall -Wextra -Isrc/include -c src/stats.c -o out/stats.o
-[EXEC] 2026-05-21 12:48:48 >>> cc -Wall -Wextra -Isrc/include out/arm64.o out/lexer.o out/preprocessor.o out/x86_64.o out/stats.o out/compiler.o out/parser.o src/main.c -o nine
-[EXEC] 2026-05-21 12:48:48 >>> ./nine examples/000_helloworld.9 -o ./out/helloworld -s -r --target arm64
