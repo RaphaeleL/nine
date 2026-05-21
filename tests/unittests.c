@@ -1,3 +1,12 @@
+/*
+ * nine — unittests.c
+ *
+ * Unit test runner: registers and executes QOL tests from test headers.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #define QOL_IMPLEMENTATION
 #define QOL_STRIP_PREFIX
 #include "../libs/build.h"

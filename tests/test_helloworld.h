@@ -1,3 +1,12 @@
+/*
+ * nine — test_helloworld.h
+ *
+ * Golden tests for examples/000_helloworld.9: expected AST and ARM64 assembly.
+ *
+ * Copyright (c) 2026 Raphaele Salvatore Licciardo
+ * SPDX-License-Identifier: MIT
+ */
+
 #include <stdio.h>
 
 #include "../src/include/compiler.h"
