@@ -180,18 +180,17 @@ static bool arm64_link(const char *asm_path, const char *bin_path)
     return run_always(&link);
 }
 
-static bool arm64_run_binary(const char *bin_path)
-{
-    Cmd run_bin = {0};
-    push(&run_bin, bin_path);
-    info("Running: %s\n", bin_path);
-    return run_always(&run_bin);
-}
-
 bool arm64_compile(AstNode *program, const CompileOptions *opts)
 {
     if (!program || !opts || !opts->input_path)
         return false;
+
+    char bin_path[256] = {0};
+    if (!nine_output_binary_path(opts, bin_path, sizeof(bin_path))) {
+        erro("Failed to derive output name from: %s\n",
+             opts->output_path ? opts->output_path : opts->input_path);
+        return false;
+    }
 
     const char *stem_source = opts->output_path ? opts->output_path : opts->input_path;
     char *base = get_filename_no_ext(stem_source);
@@ -201,7 +200,6 @@ bool arm64_compile(AstNode *program, const CompileOptions *opts)
     }
 
     char asm_path[256] = {0};
-    char bin_path[256] = {0};
 
     if (opts->save_asm) {
         if (opts->output_path) {
@@ -211,12 +209,6 @@ bool arm64_compile(AstNode *program, const CompileOptions *opts)
         }
     } else {
         snprintf(asm_path, sizeof(asm_path), "/tmp/%s.s", base);
-    }
-
-    if (opts->output_path) {
-        snprintf(bin_path, sizeof(bin_path), "%s", opts->output_path);
-    } else {
-        snprintf(bin_path, sizeof(bin_path), "./%s", base);
     }
 
     free(base);
@@ -242,11 +234,6 @@ bool arm64_compile(AstNode *program, const CompileOptions *opts)
     }
 
     info("Linked binary: %s\n", bin_path);
-
-    if (opts->run && !arm64_run_binary(bin_path)) {
-        erro("Failed to run: %s\n", bin_path);
-        return false;
-    }
 
     return true;
 }

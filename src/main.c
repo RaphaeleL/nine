@@ -172,6 +172,10 @@ int main(int argc, char **argv)
 
     nine_stats_print();
 
+    if (opts.run && !nine_run_binary(&opts)) {
+        exit_code = EXIT_FAILURE;
+    }
+
 cleanup:
     ast_release(program);
     token_list_release(&tokens);

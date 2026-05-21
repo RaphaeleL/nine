@@ -33,6 +33,42 @@ Target get_target(void)
     return TARGET_UNSUPPORTED;
 }
 
+bool nine_output_binary_path(const CompileOptions *opts, char *buf, size_t buflen)
+{
+    if (!opts || !opts->input_path || !buf || buflen == 0) {
+        return false;
+    }
+
+    const char *stem_source = opts->output_path ? opts->output_path : opts->input_path;
+    char *base = get_filename_no_ext(stem_source);
+    if (!base) {
+        return false;
+    }
+
+    int n;
+    if (opts->output_path) {
+        n = snprintf(buf, buflen, "%s", opts->output_path);
+    } else {
+        n = snprintf(buf, buflen, "./%s", base);
+    }
+    free(base);
+    return n > 0 && (size_t)n < buflen;
+}
+
+bool nine_run_binary(const CompileOptions *opts)
+{
+    char bin_path[256] = {0};
+    if (!nine_output_binary_path(opts, bin_path, sizeof(bin_path))) {
+        erro("Failed to resolve output binary path\n");
+        return false;
+    }
+
+    Cmd run_bin = {0};
+    push(&run_bin, bin_path);
+    info("Running: %s\n", bin_path);
+    return run_always(&run_bin);
+}
+
 const char *target_name(Target target)
 {
     const char *real_target = "n/a";

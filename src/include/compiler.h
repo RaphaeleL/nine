@@ -28,6 +28,8 @@ typedef struct {
 } CompileOptions;
 
 bool compile(AstNode *program, const CompileOptions *opts);
+bool nine_output_binary_path(const CompileOptions *opts, char *buf, size_t buflen);
+bool nine_run_binary(const CompileOptions *opts);
 Target get_target(void);
 const char *target_name(Target target);
 
