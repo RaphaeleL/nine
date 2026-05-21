@@ -41,7 +41,7 @@ static void strip_line_comment(char *line)
             in_string = !in_string;
             continue;
         }
-        if (!in_string && p[0] == '/' && p[1] == '/') {
+        if (!in_string && p[0] == '-' && p[1] == '-') {
             *p = '\0';
             break;
         }
